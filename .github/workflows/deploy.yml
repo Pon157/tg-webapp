@@ -1,4 +1,4 @@
-name: Deploy TMA to Ubuntu
+name: Deploy TMA
 
 on:
   push:
@@ -8,26 +8,29 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Deploy to Server
+      - name: Deploy to Server via SSH
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /path/to/your/app  # Путь к папке на сервере
-            git pull origin main
+            # Переходим в папку, где уже живет бот
+            cd ~/rating_bot_final
             
-            # Настройка Backend
-            cd backend
-            npm install --production
+            # Если в этой папке еще не инициализирован этот репозиторий:
+            # git init (только если папка пустая от гита)
             
-            # Настройка Frontend (копируем в папку Nginx)
-            sudo cp -r ../frontend/* /var/www/tma/
+            # Скачиваем обновления (файлы api.py и папку frontend)
+            git pull origin main || git clone https://github.com/ВАШ_ЛОГИН/РЕПО_ТМА.git .
             
-            # Перезапуск приложения
-            cd ..
-            pm2 reload ecosystem.config.js --env production
+            # Установка библиотек в существующий venv
+            source venv/bin/activate
+            pip install fastapi uvicorn psycopg2-binary python-dotenv
+            
+            # Обновление фронтенда для Nginx
+            sudo cp -r frontend/* /var/www/tma/
+            
+            # Перезапуск API и Бота
+            # Мы перезапускаем 'tma-api' и 'rating-bot' (имя процесса вашего main.py)
+            pm2 restart tma-api rating-bot || pm2 start "venv/bin/python3 -m uvicorn api:app --port 8000" --name tma-api
