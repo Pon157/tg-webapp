@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rating App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <style>
+        body { font-family: sans-serif; background: var(--tg-theme-bg-color, #f0f2f5); color: var(--tg-theme-text-color, #000); margin: 0; padding: 20px; }
+        .swiper { width: 100%; padding-top: 20px; padding-bottom: 50px; }
+        .card { 
+            background: var(--tg-theme-secondary-bg-color, #fff); 
+            border-radius: 15px; padding: 20px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            height: 250px; display: flex; flex-direction: column; justify-content: space-between;
+        }
+        .rank { background: #0088cc; color: white; padding: 4px 8px; border-radius: 8px; font-size: 12px; }
+        .rank.first { background: #ffd700; color: #000; font-weight: bold; }
+        .score { font-weight: bold; color: #28a745; }
+    </style>
+</head>
+<body>
+    <h2 style="text-align: center;">Топ Проектов</h2>
+    <div class="swiper">
+        <div class="swiper-wrapper" id="project-list">
+            </div>
+        <div class="swiper-pagination"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+
+        async function loadProjects() {
+            const response = await fetch('/api/projects'); // Путь к вашему API
+            const projects = await response.json();
+            const container = document.getElementById('project-list');
+
+            container.innerHTML = projects.map((p, index) => `
+                <div class="swiper-slide">
+                    <div class="card">
+                        <div>
+                            <span class="rank ${index === 0 ? 'first' : ''}">#${index + 1} место</span>
+                            <h3>${p.name}</h3>
+                            <p>${p.description || 'Нет описания'}</p>
+                        </div>
+                        <div style="display:flex; justify-content: space-between; border-top: 1px solid #eee; pt: 10px;">
+                            <span>${p.category}</span>
+                            <span class="score">${p.score} pts</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            new Swiper('.swiper', {
+                slidesPerView: 1.2,
+                centeredSlides: true,
+                spaceBetween: 20,
+                pagination: { el: '.swiper-pagination' },
+            });
+        }
+
+        loadProjects();
+    </script>
+</body>
+</html>
