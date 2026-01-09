@@ -1,26 +1,18 @@
 import os
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-import psycopg2
-from psycopg2.extras import RealDictCursor
 from dotenv import load_dotenv
+from supabase import create_client, Client
+from fastapi import FastAPI
 
 load_dotenv()
+
+url: str = os.environ.get("SUPABASE_URL")
+key: str = os.environ.get("SUPABASE_KEY")
+supabase: Client = create_client(url, key)
+
 app = FastAPI()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 @app.get("/api/projects")
-def get_projects():
-    conn = psycopg2.connect(os.getenv("DATABASE_URL"))
-    cur = conn.cursor(cursor_factory=RealDictCursor)
-    cur.execute("SELECT * FROM projects ORDER BY score DESC")
-    projects = cur.fetchall()
-    cur.close()
-    conn.close()
-    return projects
+async def get_projects():
+    # Запрос через API ключ к таблице projects
+    response = supabase.table("projects").select("*").execute()
+    return response.data
