@@ -1,0 +1,33 @@
+name: Deploy TMA to Ubuntu
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /path/to/your/app  # Путь к папке на сервере
+            git pull origin main
+            
+            # Настройка Backend
+            cd backend
+            npm install --production
+            
+            # Настройка Frontend (копируем в папку Nginx)
+            sudo cp -r ../frontend/* /var/www/tma/
+            
+            # Перезапуск приложения
+            cd ..
+            pm2 reload ecosystem.config.js --env production
