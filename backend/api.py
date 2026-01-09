@@ -5,8 +5,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from dotenv import load_dotenv
 
-load_dotenv() # Он подтянет ваш существующий .env
-
+load_dotenv()
 app = FastAPI()
 
 app.add_middleware(
@@ -18,7 +17,6 @@ app.add_middleware(
 
 @app.get("/api/projects")
 def get_projects():
-    # Используем DATABASE_URL из вашего .env
     conn = psycopg2.connect(os.getenv("DATABASE_URL"))
     cur = conn.cursor(cursor_factory=RealDictCursor)
     cur.execute("SELECT * FROM projects ORDER BY score DESC")
@@ -26,4 +24,3 @@ def get_projects():
     cur.close()
     conn.close()
     return projects
-  
